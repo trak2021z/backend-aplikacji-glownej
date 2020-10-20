@@ -80,7 +80,7 @@ class SellOffer(models.Model):
 class Transaction(models.Model):
     sell = models.ForeignKey('SellOffer', on_delete=models.CASCADE, related_name='transactions', null=True)
     buy = models.ForeignKey('BuyOffer', on_delete=models.CASCADE, related_name='transactions', null=True)
-    stock = models.ForeignKey('Stock', on_delete = momdels.CASCADE, related_name='transactions', null=True)
+    stock = models.ForeignKey('Stock', on_delete = models.CASCADE, related_name='transactions', null=True)
     user = models.ForeignKey('Profile', on_delete=models.CASCADE, related_name='transactions', null=True)
     amount = models.PositiveIntegerField(default=0)
     unit_price = models.DecimalField(max_digits=12, decimal_places=2)
