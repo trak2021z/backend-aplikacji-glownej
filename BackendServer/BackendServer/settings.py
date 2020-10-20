@@ -154,3 +154,5 @@ CORS_ORIGIN_ALLOW_ALL = True
 )"""
 
 ACCOUNT_EMAIL_VERIFICATION = 'none'
+
+CELERY_BROKER_URL = 'amqp://localhost:5672'
