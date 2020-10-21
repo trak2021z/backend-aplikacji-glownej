@@ -1,0 +1,1 @@
+celery -A Exchange worker -l INFO -P solo
