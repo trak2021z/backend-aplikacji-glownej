@@ -13,6 +13,8 @@ https://docs.djangoproject.com/en/3.1/ref/settings/
 from pathlib import Path
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
+from celery.schedules import crontab
+
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 
@@ -116,7 +118,7 @@ AUTH_PASSWORD_VALIDATORS = [
 
 REST_FRAMEWORK = {
     'DEFAULT_PERMISSION_CLASSES': (
-        'rest_framework.permissions.IsAuthenticated',
+        'rest_framework.permissions.AllowAny',
     ),
     'DEFAULT_AUTHENTICATION_CLASSES': (
         'rest_framework_jwt.authentication.JSONWebTokenAuthentication',
@@ -156,3 +158,13 @@ CORS_ORIGIN_ALLOW_ALL = True
 ACCOUNT_EMAIL_VERIFICATION = 'none'
 
 CELERY_BROKER_URL = 'amqp://localhost:5672'
+
+CELERY_TIMEZONE = 'Europe/Warsaw'
+
+CELERY_BEAT_SCHEDULE = {
+    # Executes every Friday at 4pm
+    'recalculate-every-hour': {
+         'task': 'Exchange.tasks.recalculate_prices_interval',
+         'schedule': crontab(minute=0, hour='*/1'),
+        },
+}

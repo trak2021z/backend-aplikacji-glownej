@@ -1,0 +1,1 @@
+celery -A Exchange beat -l INFO

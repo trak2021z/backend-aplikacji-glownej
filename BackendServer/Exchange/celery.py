@@ -1,5 +1,8 @@
 import os
+from decimal import Decimal
+
 from celery import Celery
+from celery.schedules import crontab
 
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'BackendServer.settings')
 
