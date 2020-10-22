@@ -44,7 +44,7 @@ class SingleCompanySerializer(serializers.ModelSerializer):
 class BuyOfferSerializer(serializers.ModelSerializer):
     class Meta:
         model = BuyOffer
-        fields = ['pl', 'user', 'stock', 'unit_price', 'status', 'stock_amount', 'created']
+        fields = ['pk', 'user', 'stock', 'unit_price', 'status', 'stock_amount', 'created']
 
 
 class SellOfferSerializer(serializers.ModelSerializer):
