@@ -5,15 +5,21 @@ from rest_framework.response import Response
 from rest_framework import status, serializers
 from rest_framework.pagination import LimitOffsetPagination
 from rest_framework.views import APIView
-from django.views.decorators.csrf import csrf_exempt
-from .tasks import recalculate_prices
+from .tasks import recalculate_prices, regenerate_stocks
+
 from .serializers import StockSerializer
 from .models import Stock
 from .pagination import PaginationHandlerMixin
 
 class DummyView(APIView):
     def get(self, request, pk=None, format=None):
-        recalculate_prices.delay()
+        recalculate_prices()
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+class TestView(APIView):
+    def get(self, request, pk=None, format=None):
+        regenerate_stocks()
         return Response(status=status.HTTP_204_NO_CONTENT)
     
 class StocksView(APIView, PaginationHandlerMixin):
@@ -29,19 +35,4 @@ class StocksView(APIView, PaginationHandlerMixin):
         else:
             serializer = self.serializer_class(instance, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
-
-    
-    
-    
-
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
+      
