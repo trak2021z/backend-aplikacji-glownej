@@ -6,7 +6,7 @@ from django.contrib.auth.models import User
 class ProfileSerializer(serializers.ModelSerializer):
     class Meta:
         model = Profile
-        fields = ('id', 'balance', 'created')
+        fields = ('pk', 'balance', 'created')
 
 
 class UserDetailSerializer(serializers.ModelSerializer):
@@ -14,7 +14,7 @@ class UserDetailSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = User
-        fields = ('id', 'username', 'email', 'groups', 'profile',
+        fields = ('pk', 'username', 'email', 'groups', 'profile',
                   'first_name', 'last_name')
         read_only_fields = ('profile', 'groups')
 
@@ -30,7 +30,7 @@ class StockSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Stock
-        fields = ['company', 'name', 'price', 'avail_amount']
+        fields = ['pk', 'company', 'name', 'price', 'avail_amount']
 
 
 class SingleCompanySerializer(serializers.ModelSerializer):
@@ -38,25 +38,25 @@ class SingleCompanySerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Company
-        fields = ['name', 'stocks']
+        fields = ['pk', 'name', 'stocks']
 
 
 class BuyOfferSerializer(serializers.ModelSerializer):
     class Meta:
         model = BuyOffer
-        fields = ['user', 'stock', 'unit_price', 'status', 'stock_amount', 'created']
+        fields = ['pl', 'user', 'stock', 'unit_price', 'status', 'stock_amount', 'created']
 
 
 class SellOfferSerializer(serializers.ModelSerializer):
     class Meta:
         model = SellOffer
-        fields = ['user_stock', 'unit_price', 'stock_amount', 'status', 'created']
+        fields = ['pk', 'user_stock', 'unit_price', 'stock_amount', 'status', 'created']
 
 class UserStockSerializer(serializers.ModelSerializer):
     stock = StockSerializer(read_only=True)
     class Meta:
         model = UserStock
-        fields = ['stock', 'stock_amount']
+        fields = ['pk', 'stock', 'stock_amount']
 
 class UserWalletSerializer(serializers.ModelSerializer):
     class Meta:
