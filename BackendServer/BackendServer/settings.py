@@ -131,6 +131,10 @@ JWT_AUTH = {
     'JWT_VERIFY_EXPIRATION': False
 }
 
+REST_AUTH_SERIALIZERS = {
+    'USER_DETAILS_SERIALIZER': 'Exchange.serializers.UserDetailSerializer'
+}
+
 # Internationalization
 # https://docs.djangoproject.com/en/3.1/topics/i18n/
 
