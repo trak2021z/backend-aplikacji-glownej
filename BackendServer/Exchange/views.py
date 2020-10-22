@@ -8,11 +8,10 @@ from rest_framework.views import APIView
 from django.core.exceptions import ObjectDoesNotExist
 from django.http import JsonResponse
 import json
-from .serializers import StockSerializer, BuyOfferSerializer, SellOfferSerializer, CompanySerializer, \
-    SingleCompanySerializer, UserStockSerializer, UserWalletSerializer
-from .models import Stock, BuyOffer, SellOffer, Profile, UserStock, Company
+from .serializers import *
+from .models import Stock, BuyOffer, SellOffer, Profile, UserStock, Company, Transaction
 from .tasks import recalculate_prices, regenerate_stocks
-
+from datetime import datetime as dt
 from .pagination import PaginationHandlerMixin
 
 
@@ -123,7 +122,7 @@ class UserWalletView(APIView):
 
 
 class StockBuyView(APIView):
-    serializer_class = UserStockSerializer
+    serializer_class = TransactionSerializer
 
     def post(self, request, pk=None):
         current_user = request.user.profile
@@ -149,12 +148,23 @@ class StockBuyView(APIView):
             stock.avail_amount -= quantity
             stock.save()
             new_user_stock.save()
-            serializer = self.serializer_class(new_user_stock)
+            transaction = Transaction(
+                sell=None,
+                buy=None,
+                stock=stock,
+                user=current_user,
+                amount=quantity,
+                unit_price=stock.price,
+                date=dt.now,
+                is_sell=False,
+            )
+            transaction.save()
+            serializer = self.serializer_class(transaction)
             return Response(serializer.data, status=status.HTTP_200_OK)
 
 
 class StockSellView(APIView):
-    serializer_class = UserWalletSerializer
+    serializer_class = TransactionSerializer
 
     def post(self, request, pk=None):
         current_user = request.user.profile
@@ -178,5 +188,16 @@ class StockSellView(APIView):
             else:
                 user_stock.stock_amount -= quantity
                 user_stock.save()
-            serializer = self.serializer_class(current_user)
+            transaction = Transaction(
+                sell=None,
+                buy=None,
+                stock=stock,
+                user=current_user,
+                amount=quantity,
+                unit_price=stock.price,
+                date=dt.now,
+                is_sell=True,
+            )
+            transaction.save()
+            serializer = self.serializer_class(transaction)
             return Response(serializer.data, status=status.HTTP_200_OK)
