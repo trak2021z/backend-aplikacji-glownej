@@ -49,4 +49,5 @@ urlpatterns = [
     url(r'^company/(?P<pk>\d+)/$', v.CompanyView.as_view(), name='company_view'),
     url(r'^buyoffer', v.BuyOfferView.as_view(), name='buy_offer_view'),
     url(r'^selloffer', v.SellOfferView.as_view(), name='sell_offer_view'),
+    url(r'^user/stocks/$', v.UserStockView.as_view(), name='user_stocks_view'),
 ]
