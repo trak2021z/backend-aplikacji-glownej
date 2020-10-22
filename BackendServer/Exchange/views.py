@@ -8,11 +8,13 @@ from rest_framework.views import APIView
 from django.core.exceptions import ObjectDoesNotExist
 from django.http import JsonResponse
 import json
-from .serializers import StockSerializer, BuyOfferSerializer, SellOfferSerializer
-from .models import Stock, BuyOffer, SellOffer, Profile, UserStock
+from .serializers import StockSerializer, BuyOfferSerializer, SellOfferSerializer, CompanySerializer, SingleCompanySerializer
+from .models import Stock, BuyOffer, SellOffer, Profile, UserStock, Company
 from .tasks import recalculate_prices, regenerate_stocks
 
+
 from .pagination import PaginationHandlerMixin
+
 
 class DummyView(APIView):
     def get(self, request, pk=None, format=None):
@@ -24,20 +26,37 @@ class TestView(APIView):
     def get(self, request, pk=None, format=None):
         regenerate_stocks()
         return Response(status=status.HTTP_204_NO_CONTENT)
-    
+
+
 class StocksView(APIView, PaginationHandlerMixin):
     page_size_query_param = 'limit'
     pagination_class = LimitOffsetPagination
     serializer_class = StockSerializer
 
     def get(self, request, format=None):
-        stocks = Stock.objects.all()  
+        stocks = Stock.objects.all()
         page = self.paginate_queryset(stocks)
         if page is not None:
             serializer = self.get_paginated_response(self.serializer_class(page, many=True).data)
         else:
-            serializer = self.serializer_class(instance, many=True)
+            serializer = self.serializer_class(stocks, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
+
+
+class CompanyView(APIView):
+    company_serializer_class = CompanySerializer
+    single_company_serializer_class = SingleCompanySerializer
+
+    def get(self, request, pk=None, format=None):
+        if pk:
+            company = Company.objects.get(id=pk)
+            stocks = Stock.objects.all().filter(company = company)
+            serializer = self.single_company_serializer_class(company)
+        else:
+            companies = Company.objects.all()
+            serializer = self.company_serializer_class(companies, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
         
 class BuyOfferView(APIView):
     def post(self, request):
@@ -78,3 +97,4 @@ class SellOfferView(APIView):
             return JsonResponse({'error': str(e)}, safe=False, status=status.HTTP_404_NOT_FOUND)
         except Exception:
             return JsonResponse({'error': 'Something terrible went wrong.'}, safe=False, status=status.HTTP_500_INTERNAL_SERVER_ERROR)    
+

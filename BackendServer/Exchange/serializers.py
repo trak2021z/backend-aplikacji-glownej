@@ -1,6 +1,7 @@
 from rest_framework import serializers
-from .models import Stock, BuyOffer, SellOffer, Profile
+from .models import Stock, BuyOffer, SellOffer, Profile, Company
 from django.contrib.auth.models import User
+
 
 class ProfileSerializer(serializers.ModelSerializer):
     class Meta:
@@ -20,7 +21,18 @@ class StockSerializer(serializers.ModelSerializer):
     class Meta:
         model = Stock
         fields = ['company', 'name', 'price', 'avail_amount']
-        
+
+class CompanySerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Company
+        fields = ['name']
+
+class SingleCompanySerializer(serializers.ModelSerializer):
+    stocks = StockSerializer(many=True, read_only=True)
+    class Meta:
+        model = Company
+        fields = ['name', 'stocks']
+
 class BuyOfferSerializer(serializers.ModelSerializer):
     class Meta:
         model = BuyOffer
