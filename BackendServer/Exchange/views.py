@@ -106,7 +106,7 @@ class SellOfferView(APIView):
 class UserStockView(APIView):
     serializer_class = UserStockSerializer
     def get(self, request):
-        current_user = Profile.objects.get(id=request.user.id)
+        current_user = request.user.profile
         stocks = UserStock.objects.all().filter(user=current_user)
         serializer = self.serializer_class(stocks, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
@@ -114,6 +114,6 @@ class UserStockView(APIView):
 class UserWalletView(APIView):
     serializer_class = UserWalletSerializer
     def get(self, request):
-        current_user = Profile.objects.get(id=request.user.id)
+        current_user = request.user.profile
         serializer = self.serializer_class(current_user)
         return Response(serializer.data, status=status.HTTP_200_OK)
