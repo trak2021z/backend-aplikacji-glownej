@@ -162,7 +162,7 @@ CORS_ORIGIN_ALLOW_ALL = True
 
 ACCOUNT_EMAIL_VERIFICATION = 'none'
 
-CELERY_BROKER_URL = 'amqp://localhost:5672'
+CELERY_BROKER_URL = 'amqp://guest:guest@rabbitmq:5672'
 
 CELERY_TIMEZONE = 'Europe/Warsaw'
 
