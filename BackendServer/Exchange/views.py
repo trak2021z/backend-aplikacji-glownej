@@ -62,7 +62,7 @@ class BuyOfferView(APIView):
     def post(self, request):
         try:
             payload = json.loads(request.body)
-            currentUser = Profile.objects.get(id=request.user.id)
+            currentUser = request.user.profile
             payloadStock = Stock.objects.get(id=payload["stock"])
             buyOffer = BuyOffer.objects.create(
                 user=currentUser,
@@ -83,7 +83,7 @@ class SellOfferView(APIView):
     def post(self, request):
         try:
             payload = json.loads(request.body)
-            currentUser = Profile.objects.get(id=request.user.id)
+            currentUser = request.user.profile
             userStock = UserStock.objects.get(id=payload["user_stock"])
             if (userStock.user.id == currentUser.id and userStock.stock_amount >= payload["stock_amount"]):
                 sellOffer = SellOffer.objects.create(
@@ -105,15 +105,78 @@ class SellOfferView(APIView):
 
 class UserStockView(APIView):
     serializer_class = UserStockSerializer
+
     def get(self, request):
         current_user = request.user.profile
         stocks = UserStock.objects.all().filter(user=current_user)
         serializer = self.serializer_class(stocks, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
+
 class UserWalletView(APIView):
     serializer_class = UserWalletSerializer
+
     def get(self, request):
         current_user = request.user.profile
         serializer = self.serializer_class(current_user)
         return Response(serializer.data, status=status.HTTP_200_OK)
+
+
+class StockBuyView(APIView):
+    serializer_class = UserStockSerializer
+
+    def post(self, request, pk=None):
+        current_user = request.user.profile
+        stock = Stock.objects.get(pk=pk)
+        balance = current_user.balance
+        payload = json.loads(request.body)
+        quantity = payload["quantity"]
+        total_price = stock.price * quantity
+        stock_quantity = stock.avail_amount
+        if stock_quantity < quantity:
+            return Response({'error': 'Quantity exceeds available amount!'},
+                            status=status.HTTP_422_UNPROCESSABLE_ENTITY)
+        elif total_price > balance:
+            return Response({'error': 'Insufficient funds!'}, status=status.HTTP_422_UNPROCESSABLE_ENTITY)
+        else:
+            new_user_stock = UserStock(
+                user=current_user,
+                stock=stock,
+                stock_amount=quantity,
+            )
+            current_user.balance -= total_price
+            current_user.save()
+            stock.avail_amount -= quantity
+            stock.save()
+            new_user_stock.save()
+            serializer = self.serializer_class(new_user_stock)
+            return Response(serializer.data, status=status.HTTP_200_OK)
+
+
+class StockSellView(APIView):
+    serializer_class = UserWalletSerializer
+
+    def post(self, request, pk=None):
+        current_user = request.user.profile
+        payload = json.loads(request.body)
+        quantity = payload["quantity"]
+        current_user = request.user.profile
+        user_stock = UserStock.objects.get(pk=pk)
+        stock = user_stock.stock
+        total_price = stock.price * quantity
+        stock_quantity = user_stock.stock_amount
+        if stock_quantity < quantity:
+            return Response({'error': 'Quantity exceeds owned amount!'},
+                            status=status.HTTP_422_UNPROCESSABLE_ENTITY)
+        else:
+            current_user.balance += total_price
+            current_user.save()
+            stock.avail_amount += quantity
+            stock.save()
+            if stock_quantity == quantity:
+                user_stock.delete()
+            else:
+                user_stock.stock_amount -= quantity
+                user_stock.save()
+            serializer = self.serializer_class(current_user)
+            return Response(serializer.data, status=status.HTTP_200_OK)
