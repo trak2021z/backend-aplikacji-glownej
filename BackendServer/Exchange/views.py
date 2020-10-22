@@ -28,11 +28,11 @@ class StocksView(APIView, PaginationHandlerMixin):
     serializer_class = StockSerializer
 
     def get(self, request, format=None):
-        stocks = Stock.objects.all()  
+        stocks = Stock.objects.all()
         page = self.paginate_queryset(stocks)
         if page is not None:
             serializer = self.get_paginated_response(self.serializer_class(page, many=True).data)
         else:
-            serializer = self.serializer_class(instance, many=True)
+            serializer = self.serializer_class(stocks, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
       
