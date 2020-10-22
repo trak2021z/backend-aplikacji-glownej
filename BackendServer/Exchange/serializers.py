@@ -8,8 +8,10 @@ class ProfileSerializer(serializers.ModelSerializer):
         model = Profile
         fields = ('id', 'balance', 'created')
 
+
 class UserDetailSerializer(serializers.ModelSerializer):
     profile = ProfileSerializer()
+
     class Meta:
         model = User
         fields = ('id', 'username', 'email', 'groups', 'profile',
@@ -22,22 +24,27 @@ class StockSerializer(serializers.ModelSerializer):
         model = Stock
         fields = ['company', 'name', 'price', 'avail_amount']
 
+
 class CompanySerializer(serializers.ModelSerializer):
     class Meta:
         model = Company
-        fields = ['name']
+        fields = ['pk', 'name']
+
 
 class SingleCompanySerializer(serializers.ModelSerializer):
     stocks = StockSerializer(many=True, read_only=True)
+
     class Meta:
         model = Company
         fields = ['name', 'stocks']
+
 
 class BuyOfferSerializer(serializers.ModelSerializer):
     class Meta:
         model = BuyOffer
         fields = ['user', 'stock', 'unit_price', 'status', 'stock_amount', 'created']
-        
+
+
 class SellOfferSerializer(serializers.ModelSerializer):
     class Meta:
         model = SellOffer
