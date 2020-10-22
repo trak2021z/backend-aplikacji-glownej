@@ -44,4 +44,6 @@ urlpatterns = [
     url(r'^redoc/$', schema_view.with_ui('redoc', cache_timeout=0), name='schema-redoc'),
     url(r'^foo/$', v.DummyView.as_view(), name='dummy_view'),
     url(r'^stocks/$', v.StocksView.as_view(), name='stocks_view'),
+    url(r'^buyoffer', v.BuyOfferView.as_view(), name='buy_offer_view'),
+    url(r'^selloffer', v.SellOfferView.as_view(), name='sell_offer_view'),
 ]
