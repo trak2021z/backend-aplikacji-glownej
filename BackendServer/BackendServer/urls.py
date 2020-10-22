@@ -44,5 +44,4 @@ urlpatterns = [
     url(r'^redoc/$', schema_view.with_ui('redoc', cache_timeout=0), name='schema-redoc'),
     url(r'^foo/$', v.DummyView.as_view(), name='dummy_view'),
     url(r'^bar/$', v.TestView.as_view(), name='test_view'),
-    url(r'^seed/$', v.SeedView.as_view(), name='test_view'),
 ]

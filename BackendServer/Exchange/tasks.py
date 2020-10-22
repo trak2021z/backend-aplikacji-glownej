@@ -44,15 +44,3 @@ def regenerate_stocks():
         new_items_count = stock.avail_amount + randrange(MAX_STOCKS - stock.avail_amount)
         stock.avail_amount = new_items_count
         stock.save()
-
-def seed_stocks():
-    seed()
-    companies = Company.objects.all()
-    for company in companies:
-        price = randrange(5, 250)
-        count = randrange(500, 1000)
-        new_stock = Stock(company=company,
-                          name=company.name + " - generated automatically",
-                          price=price,
-                          avail_amount=count)
-        new_stock.save()
