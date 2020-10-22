@@ -6,7 +6,7 @@ stocks = Stock.objects.all()
 for company in companies:
     already_exists = bool(len(stocks.filter(company=company)))
     if not already_exists:
-        price = randrange(5, 250)
+        price = randrange(500, 25000)/100.00
         count = randrange(500, 1000)
         new_stock = Stock(company=company,
                           name=company.name + " - generated automatically",
