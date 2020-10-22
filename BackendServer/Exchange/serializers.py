@@ -54,7 +54,11 @@ class SellOfferSerializer(serializers.ModelSerializer):
 
 class UserStockSerializer(serializers.ModelSerializer):
     stock = StockSerializer(read_only=True)
-
     class Meta:
         model = UserStock
         fields = ['stock', 'stock_amount']
+
+class UserWalletSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Profile
+        fields = ['balance']

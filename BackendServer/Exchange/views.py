@@ -9,7 +9,7 @@ from django.core.exceptions import ObjectDoesNotExist
 from django.http import JsonResponse
 import json
 from .serializers import StockSerializer, BuyOfferSerializer, SellOfferSerializer, CompanySerializer, \
-    SingleCompanySerializer, UserStockSerializer
+    SingleCompanySerializer, UserStockSerializer, UserWalletSerializer
 from .models import Stock, BuyOffer, SellOffer, Profile, UserStock, Company
 from .tasks import recalculate_prices, regenerate_stocks
 
@@ -109,4 +109,11 @@ class UserStockView(APIView):
         current_user = Profile.objects.get(id=request.user.id)
         stocks = UserStock.objects.all().filter(user=current_user)
         serializer = self.serializer_class(stocks, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+class UserWalletView(APIView):
+    serializer_class = UserWalletSerializer
+    def get(self, request):
+        current_user = Profile.objects.get(id=request.user.id)
+        serializer = self.serializer_class(current_user)
         return Response(serializer.data, status=status.HTTP_200_OK)

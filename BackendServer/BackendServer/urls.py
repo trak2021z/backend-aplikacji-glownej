@@ -50,4 +50,5 @@ urlpatterns = [
     url(r'^buyoffer', v.BuyOfferView.as_view(), name='buy_offer_view'),
     url(r'^selloffer', v.SellOfferView.as_view(), name='sell_offer_view'),
     url(r'^user/stocks/$', v.UserStockView.as_view(), name='user_stocks_view'),
+    url(r'^user/wallet/$', v.UserWalletView.as_view(), name='user_wallet_view'),
 ]
