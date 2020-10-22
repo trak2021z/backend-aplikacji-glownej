@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Stock, BuyOffer, SellOffer, Profile, Company, UserStock
+from .models import Stock, BuyOffer, SellOffer, Profile, Company, UserStock, Transaction
 from django.contrib.auth.models import User
 
 
@@ -52,13 +52,24 @@ class SellOfferSerializer(serializers.ModelSerializer):
         model = SellOffer
         fields = ['pk', 'user_stock', 'unit_price', 'stock_amount', 'status', 'created']
 
+
 class UserStockSerializer(serializers.ModelSerializer):
     stock = StockSerializer(read_only=True)
+
     class Meta:
         model = UserStock
         fields = ['pk', 'stock', 'stock_amount']
+
 
 class UserWalletSerializer(serializers.ModelSerializer):
     class Meta:
         model = Profile
         fields = ['balance']
+
+
+class TransactionSerializer(serializers.ModelSerializer):
+    stock = StockSerializer(read_only=True)
+
+    class Meta:
+        model = Transaction
+        fields = ['sell', 'buy', 'stock', 'amount', 'unit_price', 'date', 'is_sell']
