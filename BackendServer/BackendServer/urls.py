@@ -45,4 +45,6 @@ urlpatterns = [
     url(r'^foo/$', v.DummyView.as_view(), name='dummy_view'),
     url(r'^bar/$', v.TestView.as_view(), name='test_view'),
     url(r'^stocks/$', v.StocksView.as_view(), name='stocks_view'),
+    url(r'^buyoffer', v.BuyOfferView.as_view(), name='buy_offer_view'),
+    url(r'^selloffer', v.SellOfferView.as_view(), name='sell_offer_view'),
 ]
