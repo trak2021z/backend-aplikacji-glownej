@@ -19,16 +19,18 @@ class UserDetailSerializer(serializers.ModelSerializer):
         read_only_fields = ('profile', 'groups')
 
 
-class StockSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Stock
-        fields = ['company', 'name', 'price', 'avail_amount']
-
-
 class CompanySerializer(serializers.ModelSerializer):
     class Meta:
         model = Company
         fields = ['pk', 'name']
+
+
+class StockSerializer(serializers.ModelSerializer):
+    company = CompanySerializer()
+
+    class Meta:
+        model = Stock
+        fields = ['company', 'name', 'price', 'avail_amount']
 
 
 class SingleCompanySerializer(serializers.ModelSerializer):
