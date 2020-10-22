@@ -8,14 +8,21 @@ from rest_framework.views import APIView
 from django.core.exceptions import ObjectDoesNotExist
 from django.http import JsonResponse
 import json
-from .tasks import recalculate_prices
 from .serializers import StockSerializer, BuyOfferSerializer, SellOfferSerializer
 from .models import Stock, BuyOffer, SellOffer, Profile, UserStock
+from .tasks import recalculate_prices, regenerate_stocks
+
 from .pagination import PaginationHandlerMixin
 
 class DummyView(APIView):
     def get(self, request, pk=None, format=None):
-        recalculate_prices.delay()
+        recalculate_prices()
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+class TestView(APIView):
+    def get(self, request, pk=None, format=None):
+        regenerate_stocks()
         return Response(status=status.HTTP_204_NO_CONTENT)
     
 class StocksView(APIView, PaginationHandlerMixin):
@@ -71,12 +78,3 @@ class SellOfferView(APIView):
             return JsonResponse({'error': str(e)}, safe=False, status=status.HTTP_404_NOT_FOUND)
         except Exception:
             return JsonResponse({'error': 'Something terrible went wrong.'}, safe=False, status=status.HTTP_500_INTERNAL_SERVER_ERROR)    
-
-
-    
-    
-    
-    
-    
-    
-    

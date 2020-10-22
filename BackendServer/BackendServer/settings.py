@@ -118,7 +118,7 @@ AUTH_PASSWORD_VALIDATORS = [
 
 REST_FRAMEWORK = {
     'DEFAULT_PERMISSION_CLASSES': (
-        'rest_framework.permissions.AllowAny',
+        'rest_framework.permissions.IsAuthenticated',
     ),
     'DEFAULT_AUTHENTICATION_CLASSES': (
         'rest_framework_jwt.authentication.JSONWebTokenAuthentication',
@@ -129,6 +129,10 @@ REST_FRAMEWORK = {
 
 JWT_AUTH = {
     'JWT_VERIFY_EXPIRATION': False
+}
+
+REST_AUTH_SERIALIZERS = {
+    'USER_DETAILS_SERIALIZER': 'Exchange.serializers.UserDetailSerializer'
 }
 
 # Internationalization
@@ -162,9 +166,14 @@ CELERY_BROKER_URL = 'amqp://localhost:5672'
 CELERY_TIMEZONE = 'Europe/Warsaw'
 
 CELERY_BEAT_SCHEDULE = {
-    # Executes every Friday at 4pm
+    # Executes every evry full hour
     'recalculate-every-hour': {
          'task': 'Exchange.tasks.recalculate_prices_interval',
+         'schedule': crontab(minute=0, hour='*/1'),
+        },
+    # Executes every evry full hour
+    'regenerarate-every-hour': {
+         'task': 'Exchange.tasks.regenerate_stocks',
          'schedule': crontab(minute=0, hour='*/1'),
         },
 }
