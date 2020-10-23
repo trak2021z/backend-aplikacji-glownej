@@ -138,16 +138,24 @@ class StockBuyView(APIView):
         elif total_price > balance:
             return Response({'error': 'Insufficient funds!'}, status=status.HTTP_422_UNPROCESSABLE_ENTITY)
         else:
-            new_user_stock = UserStock(
-                user=current_user,
-                stock=stock,
-                stock_amount=quantity,
-            )
             current_user.balance -= total_price
             current_user.save()
             stock.avail_amount -= quantity
             stock.save()
-            new_user_stock.save()
+            try:
+                user_stock = UserStock.objects.get(stock=stock)
+            except UserStock.DoesNotExist:
+                user_stock = {}
+            if user_stock:
+                user_stock.stock_amount += quantity
+                user_stock.save()
+            else:
+                new_user_stock = UserStock(
+                    user=current_user,
+                    stock=stock,
+                    stock_amount=quantity,
+                )
+                new_user_stock.save()
             transaction = Transaction(
                 sell=None,
                 buy=None,
