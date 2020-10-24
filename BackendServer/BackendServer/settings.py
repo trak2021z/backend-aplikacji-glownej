@@ -14,6 +14,7 @@ from pathlib import Path
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 from celery.schedules import crontab
+import os
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -162,7 +163,10 @@ CORS_ORIGIN_ALLOW_ALL = True
 
 ACCOUNT_EMAIL_VERIFICATION = 'none'
 
-CELERY_BROKER_URL = 'amqp://localhost:5672'
+if os.getenv('CELERY_BROKER_URL'):
+    CELERY_BROKER_URL = os.getenv('CELERY_BROKER_URL')
+else:
+    CELERY_BROKER_URL = 'amqp://localhost:5672'
 
 CELERY_TIMEZONE = 'Europe/Warsaw'
 
