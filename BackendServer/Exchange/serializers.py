@@ -3,13 +3,34 @@ from .models import Stock, BuyOffer, SellOffer, Profile, Company, UserStock, Tra
 from django.contrib.auth.models import User
 
 
-class ProfileSerializer(serializers.ModelSerializer):
+class DynamicFieldsModelSerializer(serializers.ModelSerializer):
+    """
+    A ModelSerializer that takes an additional `fields` argument that
+    controls which fields should be displayed.
+    """
+
+    def __init__(self, *args, **kwargs):
+        # Don't pass the 'fields' arg up to the superclass
+        fields = kwargs.pop('fields', None)
+
+        # Instantiate the superclass normally
+        super(DynamicFieldsModelSerializer, self).__init__(*args, **kwargs)
+
+        if fields is not None:
+            # Drop any fields that are not specified in the `fields` argument.
+            allowed = set(fields)
+            existing = set(self.fields)
+            for field_name in existing - allowed:
+                self.fields.pop(field_name)
+
+
+class ProfileSerializer(DynamicFieldsModelSerializer):
     class Meta:
         model = Profile
         fields = ('pk', 'balance', 'created')
 
 
-class UserDetailSerializer(serializers.ModelSerializer):
+class UserDetailSerializer(DynamicFieldsModelSerializer):
     profile = ProfileSerializer()
 
     class Meta:
@@ -19,13 +40,13 @@ class UserDetailSerializer(serializers.ModelSerializer):
         read_only_fields = ('profile', 'groups')
 
 
-class CompanySerializer(serializers.ModelSerializer):
+class CompanySerializer(DynamicFieldsModelSerializer):
     class Meta:
         model = Company
-        fields = ['pk', 'name']
+        fields = ['pk', 'name', 'stocks']
 
 
-class StockSerializer(serializers.ModelSerializer):
+class StockSerializer(DynamicFieldsModelSerializer):
     company = CompanySerializer()
 
     class Meta:
@@ -33,27 +54,31 @@ class StockSerializer(serializers.ModelSerializer):
         fields = ['pk', 'company', 'name', 'price', 'avail_amount']
 
 
-class SingleCompanySerializer(serializers.ModelSerializer):
-    stocks = StockSerializer(many=True, read_only=True)
-
+class BuyOfferInputSerializer(DynamicFieldsModelSerializer):
     class Meta:
-        model = Company
-        fields = ['pk', 'name', 'stocks']
+        model = BuyOffer
+        fields = ['stock', 'unit_price', 'stock_amount']
 
 
-class BuyOfferSerializer(serializers.ModelSerializer):
+class BuyOfferSerializer(DynamicFieldsModelSerializer):
     class Meta:
         model = BuyOffer
         fields = ['pk', 'user', 'stock', 'unit_price', 'status', 'stock_amount', 'created']
 
 
-class SellOfferSerializer(serializers.ModelSerializer):
+class SellOfferInputSerializer(DynamicFieldsModelSerializer):
+    class Meta:
+        model = SellOffer
+        fields = ['user_stock', 'unit_price', 'stock_amount']
+
+
+class SellOfferSerializer(DynamicFieldsModelSerializer):
     class Meta:
         model = SellOffer
         fields = ['pk', 'user_stock', 'unit_price', 'stock_amount', 'status', 'created']
 
 
-class UserStockSerializer(serializers.ModelSerializer):
+class UserStockSerializer(DynamicFieldsModelSerializer):
     stock = StockSerializer(read_only=True)
 
     class Meta:
@@ -61,15 +86,19 @@ class UserStockSerializer(serializers.ModelSerializer):
         fields = ['pk', 'stock', 'stock_amount']
 
 
-class UserWalletSerializer(serializers.ModelSerializer):
+class UserWalletSerializer(DynamicFieldsModelSerializer):
     class Meta:
         model = Profile
         fields = ['balance']
 
 
-class TransactionSerializer(serializers.ModelSerializer):
+class TransactionSerializer(DynamicFieldsModelSerializer):
     stock = StockSerializer(read_only=True)
 
     class Meta:
         model = Transaction
         fields = ['sell', 'buy', 'stock', 'amount', 'unit_price', 'date', 'is_sell']
+
+
+class BuySellInputSerializer(serializers.Serializer):
+    quantity = serializers.IntegerField()
