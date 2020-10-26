@@ -11,7 +11,7 @@ from django.http import JsonResponse
 import json
 from .serializers import *
 from .models import Stock, BuyOffer, SellOffer, Profile, UserStock, Company, Transaction
-from .tasks import recalculate_prices, regenerate_stocks
+from .tasks import recalculate_prices, regenerate_stocks, match_sell_buy_offers
 from datetime import datetime as dt
 from .pagination import PaginationHandlerMixin
 
@@ -25,6 +25,11 @@ class DummyView(APIView):
 class TestView(APIView):
     def get(self, request, pk=None, format=None):
         regenerate_stocks()
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
+class MatchView(APIView):
+    def get(self, request, pk=None, format=None):
+        match_sell_buy_offers()
         return Response(status=status.HTTP_204_NO_CONTENT)
 
 
