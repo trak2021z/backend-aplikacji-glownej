@@ -86,3 +86,12 @@ class Transaction(models.Model):
     unit_price = models.DecimalField(max_digits=12, decimal_places=2)
     date = models.DateTimeField(auto_now_add=True)
     is_sell = models.BooleanField(default=False)
+    
+    
+class PriceHistory(models.Model):
+    stock = models.ForeignKey('Stock', on_delete=models.CASCADE, related_name='price_changes')
+    old_price = models.DecimalField(max_digits=12, decimal_places=2)
+    new_price = models.DecimalField(max_digits=12, decimal_places=2)
+    change_date = models.DateTimeField(auto_now_add=True)
+    class Meta:
+        verbose_name_plural = "price changes"
