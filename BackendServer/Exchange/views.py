@@ -193,7 +193,7 @@ class StockBuyView(APIView):
             )
             transaction.save()
             if transaction.pk % 5 == 0:
-                recalculate_prices.delay()
+                recalculate_prices()
             serializer = self.serializer_class(transaction)
             return Response(serializer.data, status=status.HTTP_200_OK)
 
@@ -239,6 +239,6 @@ class StockSellView(APIView):
             )
             transaction.save()
             if transaction.pk % 5 == 0:
-                recalculate_prices.delay()
+                recalculate_prices()
             serializer = self.serializer_class(transaction)
             return Response(serializer.data, status=status.HTTP_200_OK)
