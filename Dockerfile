@@ -11,4 +11,9 @@ WORKDIR /usr/src/app/BackendServer
 
 RUN pip3 install -r requirements.txt
 RUN python3 manage.py migrate --noinput
+RUN pip3 install -r requirements.txt
+RUN python3 manage.py migrate
+RUN python3 manage.py loaddata companies
+RUN python3 manage.py shell < seed_stocks.py
+RUN python3 manage.py createsuperuser
 EXPOSE 8000
