@@ -6,9 +6,9 @@ RUN apk add --no-cache \
     python3 \
     py3-pip 
 
-WORKDIR /
-RUN git clone https://github.com/aplikacje-internetowe-l2/backend-aplikacji-glownej.git 
+ADD ./ /usr/src/app
+WORKDIR /usr/src/app/BackendServer
 
-WORKDIR /backend-aplikacji-glownej/BackendServer
 RUN pip3 install -r requirements.txt
 RUN python3 manage.py migrate --noinput
+EXPOSE 8000
