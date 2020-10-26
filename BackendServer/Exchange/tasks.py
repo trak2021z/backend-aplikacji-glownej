@@ -3,8 +3,10 @@ from .celery import app
 from .models import *
 from decimal import *
 from random import *
-from datetime import datetime as dt
+from datetime import datetime as dt, timedelta
+import pytz
 
+utc=pytz.UTC
 MAX_STOCKS = 1000
 
 
@@ -49,11 +51,16 @@ def regenerate_stocks():
 
 @app.task
 def match_sell_buy_offers():
+    today = utc.localize(dt.utcnow())
     buy_offers = BuyOffer.objects.all().filter(status=1)
     sell_offers = SellOffer.objects.all().filter(status=1)
     for buy_offer in buy_offers:
+        if buy_offer.created + timedelta(1) < today:
+            buy_offer.status = 2
+            buy_offer.save()
+            continue
         stock = buy_offer.stock
-        profile = buy_offer.user.profile
+        profile = buy_offer.user
         balance = profile.balance
         if buy_offer.unit_price > stock.price:
             if (stock.avail_amount < buy_offer.stock_amount):
@@ -72,6 +79,20 @@ def match_sell_buy_offers():
             stock.save()
             profile.balance -= amount * stock.price
             profile.save()
+            try:
+                user_stock = UserStock.objects.get(stock=stock)
+            except UserStock.DoesNotExist:
+                user_stock = {}
+            if user_stock:
+                user_stock.stock_amount += amount
+                user_stock.save()
+            else:
+                new_user_stock = UserStock(
+                    user=profile,
+                    stock=stock,
+                    stock_amount=amount,
+                )
+                new_user_stock.save()
             new_transaction = Transaction(
                 sell=None,
                 buy=buy_offer,
@@ -84,15 +105,25 @@ def match_sell_buy_offers():
             )
             new_transaction.save()
     for sell_offer in sell_offers:
-        stock = sell_offer.stock
-        profile = sell_offer.user.profile
+        if sell_offer.created + timedelta(1) < today:
+            sell_offer.status = 2
+            sell_offer.save()
+            continue
+        stock = sell_offer.user_stock.stock
+        profile = sell_offer.user_stock.user
+        user_stock = UserStock.objects.get(stock=stock)
+        amount = sell_offer.stock_amount
         if sell_offer.unit_price < stock.price:
-            stock.avail_amount += sell_offer.stock_amount
-            profile.balance += sell_offer.stock_amount * stock.price
+            stock.avail_amount += amount
+            sell_offer.delete()
+            profile.balance += amount * stock.price
             stock.save()
             profile.save()
             sell_offer.status = 3
+            sell_offer.stock_amount = 0
             sell_offer.save()
+            user_stock.stock_amount -= amount
+            user_stock.save()
             new_transaction = Transaction(
                 sell=sell_offer,
                 buy=None,

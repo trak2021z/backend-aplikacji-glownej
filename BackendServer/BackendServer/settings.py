@@ -177,4 +177,9 @@ CELERY_BEAT_SCHEDULE = {
          'task': 'Exchange.tasks.regenerate_stocks',
          'schedule': crontab(minute=0, hour='*/1'),
         },
+    # Executes every every five minutes
+    'match-sell-buy-offers': {
+         'task': 'Exchange.tasks.match_sell_buy_offers',
+         'schedule': crontab(minute='*/5'),
+        },
 }
