@@ -145,7 +145,7 @@ class StockBuyView(APIView):
         current_user = request.user.profile
         stock = Stock.objects.get(pk=pk)
         balance = current_user.balance
-        s = BuySellInputSerializer(request.data)
+        s = BuySellInputSerializer(data=request.data)
         if not s.is_valid():
             return Response(s.errors, status=status.HTTP_400_BAD_REQUEST)
         payload = s.validated_data
@@ -199,7 +199,7 @@ class StockSellView(APIView):
     @swagger_auto_schema(request_body=BuySellInputSerializer(), responses={201: serializer_class()})
     def post(self, request, pk=None):
         current_user = request.user.profile
-        s = BuySellInputSerializer(request.data)
+        s = BuySellInputSerializer(data=request.data)
         if not s.is_valid():
             return Response(s.errors, status=status.HTTP_400_BAD_REQUEST)
         payload = s.validated_data
