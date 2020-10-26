@@ -163,7 +163,7 @@ class StockBuyView(APIView):
             stock.avail_amount -= quantity
             stock.save()
             try:
-                user_stock = UserStock.objects.get(stock=stock)
+                user_stock = UserStock.objects.get(stock=stock, user=current_user)
             except UserStock.DoesNotExist:
                 user_stock = {}
             if user_stock:
