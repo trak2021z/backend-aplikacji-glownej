@@ -43,7 +43,7 @@ class UserDetailSerializer(DynamicFieldsModelSerializer):
 class CompanySerializer(DynamicFieldsModelSerializer):
     class Meta:
         model = Company
-        fields = ['pk', 'name', 'stocks']
+        fields = ['pk', 'name']
 
 
 class StockSerializer(DynamicFieldsModelSerializer):
@@ -52,6 +52,13 @@ class StockSerializer(DynamicFieldsModelSerializer):
     class Meta:
         model = Stock
         fields = ['pk', 'company', 'name', 'price', 'avail_amount']
+
+class SingleCompanySerializer(DynamicFieldsModelSerializer):
+    stocks = StockSerializer(many=True)
+
+    class Meta:
+        model = Company
+        fields = ['pk', 'name', 'stocks']
 
 
 class BuyOfferInputSerializer(DynamicFieldsModelSerializer):

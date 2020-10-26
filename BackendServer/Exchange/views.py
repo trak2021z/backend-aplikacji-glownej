@@ -51,7 +51,7 @@ class StocksView(APIView, PaginationHandlerMixin):
 
 class CompanyView(APIView):
     serializer_class = CompanySerializer
-
+    single_serializer_class = SingleCompanySerializer
     @swagger_auto_schema(responses={200: serializer_class()})
     def get(self, request, pk=None, format=None):
         if pk:
@@ -62,7 +62,7 @@ class CompanyView(APIView):
 
     def get_single(self, request, pk, format=None):
         company = Company.objects.get(id=pk)
-        return self.serializer_class(company)
+        return self.single_serializer_class(company)
 
     def get_many(self, request, format=None):
         companies = Company.objects.all()
