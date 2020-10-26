@@ -71,7 +71,7 @@ class BuyOfferView(APIView):
             currentUser = request.user.profile
             serializer = BuyOfferInputSerializer(data=request.data, fields=('stock', 'unit_price', 'stock_amount'))
             if serializer.is_valid():
-                payloadStock = Stock.objects.get(id=serializer.validated_data['stock'])
+                payloadStock = serializer.validated_data['stock']
                 buyOffer = BuyOffer.objects.create(
                     user=currentUser,
                     stock=payloadStock,
@@ -96,7 +96,7 @@ class SellOfferView(APIView):
             currentUser = request.user.profile
             serializer = SellOfferInputSerializer(data=request.data)
             if serializer.is_valid():
-                userStock = UserStock.objects.get(id=serializer.validated_data['user_stock'])
+                userStock = serializer.validated_data['user_stock']
                 if userStock.user.id == currentUser.id and userStock.stock_amount >= serializer.validated_data["stock_amount"]:
                     sellOffer = SellOffer.objects.create(
                         user_stock=userStock,
