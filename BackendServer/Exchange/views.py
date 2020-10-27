@@ -114,7 +114,6 @@ class UserOffersView(viewsets.ViewSet):
     def get_all(self, request, format=None):
         current_user = request.user.profile
         user_stocks = UserStock.objects.filter(user=current_user)
-        print("here")
         offers = self.Offers(
             buy_offers=BuyOffer.objects.filter(user=current_user),
             sell_offers=SellOffer.objects.filter(user_stock__in=user_stocks),
@@ -144,6 +143,26 @@ class BuyOfferView(APIView):
         except Exception:
             return JsonResponse({'error': 'Something terrible went wrong'}, safe=False,
                                 status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+    def delete(self, request, pk=None, format=None):
+        current_user = request.user.profile
+        if pk:
+            try:
+                buy_offer = BuyOffer.objects.get(pk=pk)
+                if current_user == buy_offer.user:
+                    if buy_offer.status==2:
+                        return JsonResponse({'error': 'Offer has expired'}, safe=False, status=status.HTTP_409_CONFLICT)
+                    elif buy_offer.status==3:
+                        return JsonResponse({'error': 'Offer has been closed'}, safe=False, status=status.HTTP_409_CONFLICT)
+                    else:
+                        buy_offer.status=3
+                        sell_offer.save()
+                        return Response(BuyOfferSerializer(buy_offer).data, status=status.HTTP_200_OK)
+                else:
+                    return JsonResponse({'error': 'Permission denied'}, status=status.HTTP_403_UNAUTHORIZED)
+            except ObjectDoesNotExist as e:
+                return JsonResponse({'error': str(e)}, safe=False, status=status.HTTP_404_NOT_FOUND)
+        else:
+            return JsonResponse({'error': str(e)}, safe=False, status=status.HTTP_400_BAD_REQUEST)
 
 
 class SellOfferView(APIView):
@@ -172,6 +191,26 @@ class SellOfferView(APIView):
             return JsonResponse({'error': 'Something terrible went wrong.'}, safe=False,
                                 status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
+    def delete(self, request, pk=None, format=None):
+        if pk:
+            try:
+                current_user = request.user.profile
+                sell_offer = SellOffer.objects.get(pk=pk)
+                if current_user == sell_offer.user_stock.user:
+                    if sell_offer.status==2:
+                        return JsonResponse({'error': 'Offer has expired'}, safe=False, status=status.HTTP_409_CONFLICT)
+                    elif sell_offer.status==3:
+                        return JsonResponse({'error': 'Offer has been closed'}, safe=False, status=status.HTTP_409_CONFLICT)
+                    else:
+                        sell_offer.status=3
+                        sell_offer.save()
+                        return Response(SellOfferSerializer(sell_offer).data, status=status.HTTP_200_OK)
+                else:
+                    return JsonResponse({'error': 'Permission denied'}, status=status.HTTP_403_UNAUTHORIZED)
+            except ObjectDoesNotExist as e:
+                return JsonResponse({'error': str(e)}, safe=False, status=status.HTTP_404_NOT_FOUND)
+        else:
+            return JsonResponse({'error': str(e)}, safe=False, status=status.HTTP_400_BAD_REQUEST)
 
 class UserStockView(APIView):
     serializer_class = UserStockSerializer
