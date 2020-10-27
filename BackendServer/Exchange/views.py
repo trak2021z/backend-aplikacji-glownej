@@ -89,6 +89,18 @@ class TransactionView(APIView):
         return self.serializer_class(transactions, many=True)
 
 
+class UserTransactionView(APIView):
+    serializer_class = TransactionSerializer
+    @swagger_auto_schema(responses={200: serializer_class()})
+    def get(self, request, pk=None, format=None):
+        serializer = self.get_all(request, format)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+    def get_all(self, request, format=None):
+        current_user = request.user.profile
+        transactions = Transaction.objects.filter(user=current_user)
+        return self.serializer_class(transactions, many=True)
+
 class BuyOfferView(APIView):
     @swagger_auto_schema(request_body=BuyOfferInputSerializer(), responses={201: BuyOfferSerializer()})
     def post(self, request):
