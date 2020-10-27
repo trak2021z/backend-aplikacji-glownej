@@ -143,7 +143,7 @@ class UserWalletView(APIView):
 
 
 class StockBuyView(APIView):
-    serializer_class = TransactionSerializer
+    serializer_class = UserStockSerializer
 
     @swagger_auto_schema(request_body=BuySellInputSerializer(), responses={201: serializer_class()})
     def post(self, request, pk=None):
@@ -181,6 +181,7 @@ class StockBuyView(APIView):
                     stock_amount=quantity,
                 )
                 new_user_stock.save()
+                user_stock = new_user_stock
             transaction = Transaction(
                 sell=None,
                 buy=None,
@@ -194,12 +195,12 @@ class StockBuyView(APIView):
             transaction.save()
             if transaction.pk % 5 == 0:
                 recalculate_prices()
-            serializer = self.serializer_class(transaction)
+            serializer = self.serializer_class(user_stock)
             return Response(serializer.data, status=status.HTTP_200_OK)
 
 
 class StockSellView(APIView):
-    serializer_class = TransactionSerializer
+    serializer_class = UserStockSerializer
 
     @swagger_auto_schema(request_body=BuySellInputSerializer(), responses={201: serializer_class()})
     def post(self, request, pk=None):
@@ -223,6 +224,7 @@ class StockSellView(APIView):
             stock.avail_amount += quantity
             stock.save()
             if stock_quantity == quantity:
+                user_stock.stock_amount -= quantity
                 user_stock.delete()
             else:
                 user_stock.stock_amount -= quantity
@@ -240,5 +242,5 @@ class StockSellView(APIView):
             transaction.save()
             if transaction.pk % 5 == 0:
                 recalculate_prices()
-            serializer = self.serializer_class(transaction)
+            serializer = self.serializer_class(user_stock)
             return Response(serializer.data, status=status.HTTP_200_OK)
