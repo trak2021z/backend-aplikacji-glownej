@@ -85,6 +85,10 @@ class SellOfferSerializer(DynamicFieldsModelSerializer):
         fields = ['pk', 'user_stock', 'unit_price', 'stock_amount', 'status', 'created']
 
 
+class OfferSerializer(serializers.Serializer):
+    buy_offers = BuyOfferSerializer(many=True)
+    sell_offers = SellOfferSerializer(many=True)
+
 class UserStockSerializer(DynamicFieldsModelSerializer):
     stock = StockSerializer(read_only=True)
 

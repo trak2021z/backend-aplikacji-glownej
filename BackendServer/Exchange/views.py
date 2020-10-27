@@ -3,7 +3,7 @@ from django.shortcuts import render
 # Create your views here.
 from drf_yasg2.utils import swagger_auto_schema, is_list_view
 from rest_framework.response import Response
-from rest_framework import status, serializers
+from rest_framework import status, serializers, viewsets
 from rest_framework.pagination import LimitOffsetPagination
 from rest_framework.views import APIView
 from django.core.exceptions import ObjectDoesNotExist
@@ -14,6 +14,8 @@ from .models import Stock, BuyOffer, SellOffer, Profile, UserStock, Company, Tra
 from .tasks import recalculate_prices, regenerate_stocks, match_sell_buy_offers
 from datetime import datetime as dt
 from .pagination import PaginationHandlerMixin
+from collections import namedtuple
+
 
 
 class DummyView(APIView):
@@ -100,6 +102,24 @@ class UserTransactionView(APIView):
         current_user = request.user.profile
         transactions = Transaction.objects.filter(user=current_user)
         return self.serializer_class(transactions, many=True)
+
+class UserOffersView(viewsets.ViewSet):
+    serializer_class = OfferSerializer
+    Offers = namedtuple('Offers', ('buy_offers', 'sell_offers'))
+    @swagger_auto_schema(responses={200: serializer_class()})
+    def get(self, request, pk=None, format=None):
+        serializer = self.get_all(request, format)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+    def get_all(self, request, format=None):
+        current_user = request.user.profile
+        user_stocks = UserStock.objects.filter(user=current_user)
+        print("here")
+        offers = self.Offers(
+            buy_offers=BuyOffer.objects.filter(user=current_user),
+            sell_offers=SellOffer.objects.filter(user_stock__in=user_stocks),
+        )
+        return self.serializer_class(offers)
 
 class BuyOfferView(APIView):
     @swagger_auto_schema(request_body=BuyOfferInputSerializer(), responses={201: BuyOfferSerializer()})
