@@ -3,7 +3,7 @@ from django.shortcuts import render
 # Create your views here.
 from drf_yasg2.utils import swagger_auto_schema, is_list_view
 from rest_framework.response import Response
-from rest_framework import status, serializers
+from rest_framework import status, serializers, viewsets
 from rest_framework.pagination import LimitOffsetPagination
 from rest_framework.views import APIView
 from django.core.exceptions import ObjectDoesNotExist
@@ -14,6 +14,8 @@ from .models import Stock, BuyOffer, SellOffer, Profile, UserStock, Company, Tra
 from .tasks import recalculate_prices, regenerate_stocks, match_sell_buy_offers
 from datetime import datetime as dt
 from .pagination import PaginationHandlerMixin
+from collections import namedtuple
+
 
 
 class DummyView(APIView):
@@ -69,6 +71,55 @@ class CompanyView(APIView):
         return self.serializer_class(companies, many=True, fields=('pk', 'name'))
 
 
+class TransactionView(APIView):
+    serializer_class = TransactionSerializer
+    @swagger_auto_schema(responses={200: serializer_class()})
+    def get(self, request, pk=None, format=None):
+        if pk:
+            serializer = self.get_stock(request, pk, format)
+        else:
+            serializer = self.get_all(request, format)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+    def get_stock(self, request, pk, format=None):
+        stock = Stock.objects.get(id=pk)
+        transactions = Transaction.objects.filter(stock=stock)
+        return self.serializer_class(transactions, many=True)
+
+    def get_all(self, request, format=None):
+        transactions = Transaction.objects.all()
+        return self.serializer_class(transactions, many=True)
+
+
+class UserTransactionView(APIView):
+    serializer_class = TransactionSerializer
+    @swagger_auto_schema(responses={200: serializer_class()})
+    def get(self, request, pk=None, format=None):
+        serializer = self.get_all(request, format)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+    def get_all(self, request, format=None):
+        current_user = request.user.profile
+        transactions = Transaction.objects.filter(user=current_user)
+        return self.serializer_class(transactions, many=True)
+
+class UserOffersView(viewsets.ViewSet):
+    serializer_class = OfferSerializer
+    Offers = namedtuple('Offers', ('buy_offers', 'sell_offers'))
+    @swagger_auto_schema(responses={200: serializer_class()})
+    def get(self, request, pk=None, format=None):
+        serializer = self.get_all(request, format)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+    def get_all(self, request, format=None):
+        current_user = request.user.profile
+        user_stocks = UserStock.objects.filter(user=current_user)
+        offers = self.Offers(
+            buy_offers=BuyOffer.objects.filter(user=current_user),
+            sell_offers=SellOffer.objects.filter(user_stock__in=user_stocks),
+        )
+        return self.serializer_class(offers)
+
 class BuyOfferView(APIView):
     @swagger_auto_schema(request_body=BuyOfferInputSerializer(), responses={201: BuyOfferSerializer()})
     def post(self, request):
@@ -92,6 +143,26 @@ class BuyOfferView(APIView):
         except Exception:
             return JsonResponse({'error': 'Something terrible went wrong'}, safe=False,
                                 status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+    def delete(self, request, pk=None, format=None):
+        current_user = request.user.profile
+        if pk:
+            try:
+                buy_offer = BuyOffer.objects.get(pk=pk)
+                if current_user == buy_offer.user:
+                    if buy_offer.status==2:
+                        return JsonResponse({'error': 'Offer has expired'}, safe=False, status=status.HTTP_409_CONFLICT)
+                    elif buy_offer.status==3:
+                        return JsonResponse({'error': 'Offer has been closed'}, safe=False, status=status.HTTP_409_CONFLICT)
+                    else:
+                        buy_offer.status=3
+                        sell_offer.save()
+                        return Response(BuyOfferSerializer(buy_offer).data, status=status.HTTP_200_OK)
+                else:
+                    return JsonResponse({'error': 'Permission denied'}, status=status.HTTP_403_UNAUTHORIZED)
+            except ObjectDoesNotExist as e:
+                return JsonResponse({'error': str(e)}, safe=False, status=status.HTTP_404_NOT_FOUND)
+        else:
+            return JsonResponse({'error': str(e)}, safe=False, status=status.HTTP_400_BAD_REQUEST)
 
 
 class SellOfferView(APIView):
@@ -120,6 +191,26 @@ class SellOfferView(APIView):
             return JsonResponse({'error': 'Something terrible went wrong.'}, safe=False,
                                 status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
+    def delete(self, request, pk=None, format=None):
+        if pk:
+            try:
+                current_user = request.user.profile
+                sell_offer = SellOffer.objects.get(pk=pk)
+                if current_user == sell_offer.user_stock.user:
+                    if sell_offer.status==2:
+                        return JsonResponse({'error': 'Offer has expired'}, safe=False, status=status.HTTP_409_CONFLICT)
+                    elif sell_offer.status==3:
+                        return JsonResponse({'error': 'Offer has been closed'}, safe=False, status=status.HTTP_409_CONFLICT)
+                    else:
+                        sell_offer.status=3
+                        sell_offer.save()
+                        return Response(SellOfferSerializer(sell_offer).data, status=status.HTTP_200_OK)
+                else:
+                    return JsonResponse({'error': 'Permission denied'}, status=status.HTTP_403_UNAUTHORIZED)
+            except ObjectDoesNotExist as e:
+                return JsonResponse({'error': str(e)}, safe=False, status=status.HTTP_404_NOT_FOUND)
+        else:
+            return JsonResponse({'error': str(e)}, safe=False, status=status.HTTP_400_BAD_REQUEST)
 
 class UserStockView(APIView):
     serializer_class = UserStockSerializer
@@ -143,7 +234,7 @@ class UserWalletView(APIView):
 
 
 class StockBuyView(APIView):
-    serializer_class = TransactionSerializer
+    serializer_class = UserStockSerializer
 
     @swagger_auto_schema(request_body=BuySellInputSerializer(), responses={201: serializer_class()})
     def post(self, request, pk=None):
@@ -181,6 +272,7 @@ class StockBuyView(APIView):
                     stock_amount=quantity,
                 )
                 new_user_stock.save()
+                user_stock = new_user_stock
             transaction = Transaction(
                 sell=None,
                 buy=None,
@@ -194,12 +286,12 @@ class StockBuyView(APIView):
             transaction.save()
             if transaction.pk % 5 == 0:
                 recalculate_prices()
-            serializer = self.serializer_class(transaction)
+            serializer = self.serializer_class(user_stock)
             return Response(serializer.data, status=status.HTTP_200_OK)
 
 
 class StockSellView(APIView):
-    serializer_class = TransactionSerializer
+    serializer_class = UserStockSerializer
 
     @swagger_auto_schema(request_body=BuySellInputSerializer(), responses={201: serializer_class()})
     def post(self, request, pk=None):
@@ -223,6 +315,7 @@ class StockSellView(APIView):
             stock.avail_amount += quantity
             stock.save()
             if stock_quantity == quantity:
+                user_stock.stock_amount -= quantity
                 user_stock.delete()
             else:
                 user_stock.stock_amount -= quantity
@@ -240,5 +333,5 @@ class StockSellView(APIView):
             transaction.save()
             if transaction.pk % 5 == 0:
                 recalculate_prices()
-            serializer = self.serializer_class(transaction)
+            serializer = self.serializer_class(user_stock)
             return Response(serializer.data, status=status.HTTP_200_OK)
