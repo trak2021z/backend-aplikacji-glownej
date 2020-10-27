@@ -69,6 +69,26 @@ class CompanyView(APIView):
         return self.serializer_class(companies, many=True, fields=('pk', 'name'))
 
 
+class TransactionView(APIView):
+    serializer_class = TransactionSerializer
+    @swagger_auto_schema(responses={200: serializer_class()})
+    def get(self, request, pk=None, format=None):
+        if pk:
+            serializer = self.get_stock(request, pk, format)
+        else:
+            serializer = self.get_all(request, format)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+    def get_stock(self, request, pk, format=None):
+        stock = Stock.objects.get(id=pk)
+        transactions = Transaction.objects.filter(stock=stock)
+        return self.serializer_class(transactions, many=True)
+
+    def get_all(self, request, format=None):
+        transactions = Transaction.objects.all()
+        return self.serializer_class(transactions, many=True)
+
+
 class BuyOfferView(APIView):
     @swagger_auto_schema(request_body=BuyOfferInputSerializer(), responses={201: BuyOfferSerializer()})
     def post(self, request):
