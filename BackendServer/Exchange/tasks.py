@@ -72,9 +72,9 @@ def match_sell_buy_offers():
         profile = buy_offer.user
         balance = profile.balance
         if buy_offer.unit_price > stock.price:
-            if (stock.avail_amount < buy_offer.stock_amount):
+            if stock.avail_amount < buy_offer.stock_amount:
                 total_price = stock.avail_amount * stock.price
-                if (total_price > balance):
+                if total_price > balance:
                     amount = int(balance / stock.price)
                 else:
                     amount = stock.avail_amount
