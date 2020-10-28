@@ -25,13 +25,13 @@ def recalculate_prices():
         if logical_xor(last_transaction.sell, last_transaction.is_sell):
             old_price = stock.price
             stock.price -= last_transaction.amount * Decimal('0.2')
-            new_price = stocks.price
+            new_price = stock.price
             stock.save()
             PriceHistory.objects.create(stock=stock, old_price=old_price, new_price=new_price)
         else:
             old_price = stock.price
             stock.price += last_transaction.amount * Decimal('0.2')
-            new_price = stocks.price
+            new_price = stock.price
             stock.save()
             PriceHistory.objects.create(stock=stock, old_price=old_price, new_price=new_price)
 
@@ -43,7 +43,7 @@ def recalculate_prices_interval():
         last_transaction: Transaction = Transaction.objects.filter(stock=stock).last()
         old_price = stock.price
         stock.price -= last_transaction.amount * Decimal('0.1')
-        new_price = stocks.price
+        new_price = stock.price
         stock.save()
         PriceHistory.objects.create(stock=stock, old_price=old_price, new_price=new_price)
 
