@@ -23,11 +23,17 @@ def recalculate_prices():
     for stock in stocks:
         last_transaction: Transaction = Transaction.objects.filter(stock=stock).last()
         if logical_xor(last_transaction.sell, last_transaction.is_sell):
+            old_price = stock.price
             stock.price -= last_transaction.amount * Decimal('0.2')
+            new_price = stocks.price
             stock.save()
+            PriceHistory.objects.create(stock=stock, old_price=old_price, new_price=new_price)
         else:
+            old_price = stock.price
             stock.price += last_transaction.amount * Decimal('0.2')
+            new_price = stocks.price
             stock.save()
+            PriceHistory.objects.create(stock=stock, old_price=old_price, new_price=new_price)
 
 
 @app.task
@@ -35,8 +41,11 @@ def recalculate_prices_interval():
     stocks = Stock.objects.all()
     for stock in stocks:
         last_transaction: Transaction = Transaction.objects.filter(stock=stock).last()
+        old_price = stock.price
         stock.price -= last_transaction.amount * Decimal('0.1')
+        new_price = stocks.price
         stock.save()
+        PriceHistory.objects.create(stock=stock, old_price=old_price, new_price=new_price)
 
 
 @app.task
@@ -63,9 +72,9 @@ def match_sell_buy_offers():
         profile = buy_offer.user
         balance = profile.balance
         if buy_offer.unit_price > stock.price:
-            if (stock.avail_amount < buy_offer.stock_amount):
+            if stock.avail_amount < buy_offer.stock_amount:
                 total_price = stock.avail_amount * stock.price
-                if (total_price > balance):
+                if total_price > balance:
                     amount = int(balance / stock.price)
                 else:
                     amount = stock.avail_amount
