@@ -93,5 +93,6 @@ class PriceHistory(models.Model):
     old_price = models.DecimalField(max_digits=12, decimal_places=2)
     new_price = models.DecimalField(max_digits=12, decimal_places=2)
     change_date = models.DateTimeField(auto_now_add=True)
+
     class Meta:
         verbose_name_plural = "price changes"

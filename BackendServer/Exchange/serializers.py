@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Stock, BuyOffer, SellOffer, Profile, Company, UserStock, Transaction
+from .models import Stock, BuyOffer, SellOffer, Profile, Company, UserStock, Transaction, PriceHistory
 from django.contrib.auth.models import User
 
 
@@ -89,6 +89,7 @@ class OfferSerializer(serializers.Serializer):
     buy_offers = BuyOfferSerializer(many=True)
     sell_offers = SellOfferSerializer(many=True)
 
+
 class UserStockSerializer(DynamicFieldsModelSerializer):
     stock = StockSerializer(read_only=True)
 
@@ -113,3 +114,11 @@ class TransactionSerializer(DynamicFieldsModelSerializer):
 
 class BuySellInputSerializer(serializers.Serializer):
     quantity = serializers.IntegerField()
+
+
+class PriceHistorySerializer(DynamicFieldsModelSerializer):
+    stock = StockSerializer()
+
+    class Meta:
+        model = PriceHistory
+        fields = ['pk', 'old_price', 'new_price', 'change_date', 'stock']

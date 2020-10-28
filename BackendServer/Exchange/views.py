@@ -17,7 +17,6 @@ from .pagination import PaginationHandlerMixin
 from collections import namedtuple
 
 
-
 class DummyView(APIView):
     def get(self, request, pk=None, format=None):
         recalculate_prices()
@@ -28,6 +27,7 @@ class TestView(APIView):
     def get(self, request, pk=None, format=None):
         regenerate_stocks()
         return Response(status=status.HTTP_204_NO_CONTENT)
+
 
 class MatchView(APIView):
     def get(self, request, pk=None, format=None):
@@ -54,6 +54,7 @@ class StocksView(APIView, PaginationHandlerMixin):
 class CompanyView(APIView):
     serializer_class = CompanySerializer
     single_serializer_class = SingleCompanySerializer
+
     @swagger_auto_schema(responses={200: serializer_class()})
     def get(self, request, pk=None, format=None):
         if pk:
@@ -73,6 +74,7 @@ class CompanyView(APIView):
 
 class TransactionView(APIView):
     serializer_class = TransactionSerializer
+
     @swagger_auto_schema(responses={200: serializer_class()})
     def get(self, request, pk=None, format=None):
         if pk:
@@ -93,6 +95,7 @@ class TransactionView(APIView):
 
 class UserTransactionView(APIView):
     serializer_class = TransactionSerializer
+
     @swagger_auto_schema(responses={200: serializer_class()})
     def get(self, request, pk=None, format=None):
         serializer = self.get_all(request, format)
@@ -103,9 +106,11 @@ class UserTransactionView(APIView):
         transactions = Transaction.objects.filter(user=current_user)
         return self.serializer_class(transactions, many=True)
 
+
 class UserOffersView(viewsets.ViewSet):
     serializer_class = OfferSerializer
     Offers = namedtuple('Offers', ('buy_offers', 'sell_offers'))
+
     @swagger_auto_schema(responses={200: serializer_class()})
     def get(self, request, pk=None, format=None):
         serializer = self.get_all(request, format)
@@ -119,6 +124,7 @@ class UserOffersView(viewsets.ViewSet):
             sell_offers=SellOffer.objects.filter(user_stock__in=user_stocks),
         )
         return self.serializer_class(offers)
+
 
 class BuyOfferView(APIView):
     @swagger_auto_schema(request_body=BuyOfferInputSerializer(), responses={201: BuyOfferSerializer()})
@@ -143,18 +149,20 @@ class BuyOfferView(APIView):
         except Exception:
             return JsonResponse({'error': 'Something terrible went wrong'}, safe=False,
                                 status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
     def delete(self, request, pk=None, format=None):
         current_user = request.user.profile
         if pk:
             try:
                 buy_offer = BuyOffer.objects.get(pk=pk)
                 if current_user == buy_offer.user:
-                    if buy_offer.status==2:
+                    if buy_offer.status == 2:
                         return JsonResponse({'error': 'Offer has expired'}, safe=False, status=status.HTTP_409_CONFLICT)
-                    elif buy_offer.status==3:
-                        return JsonResponse({'error': 'Offer has been closed'}, safe=False, status=status.HTTP_409_CONFLICT)
+                    elif buy_offer.status == 3:
+                        return JsonResponse({'error': 'Offer has been closed'}, safe=False,
+                                            status=status.HTTP_409_CONFLICT)
                     else:
-                        buy_offer.status=3
+                        buy_offer.status = 3
                         sell_offer.save()
                         return Response(BuyOfferSerializer(buy_offer).data, status=status.HTTP_200_OK)
                 else:
@@ -173,7 +181,8 @@ class SellOfferView(APIView):
             serializer = SellOfferInputSerializer(data=request.data)
             if serializer.is_valid():
                 userStock = serializer.validated_data['user_stock']
-                if userStock.user.id == currentUser.id and userStock.stock_amount >= serializer.validated_data["stock_amount"]:
+                if userStock.user.id == currentUser.id and userStock.stock_amount >= serializer.validated_data[
+                    "stock_amount"]:
                     sellOffer = SellOffer.objects.create(
                         user_stock=userStock,
                         unit_price=serializer.validated_data["unit_price"],
@@ -197,12 +206,13 @@ class SellOfferView(APIView):
                 current_user = request.user.profile
                 sell_offer = SellOffer.objects.get(pk=pk)
                 if current_user == sell_offer.user_stock.user:
-                    if sell_offer.status==2:
+                    if sell_offer.status == 2:
                         return JsonResponse({'error': 'Offer has expired'}, safe=False, status=status.HTTP_409_CONFLICT)
-                    elif sell_offer.status==3:
-                        return JsonResponse({'error': 'Offer has been closed'}, safe=False, status=status.HTTP_409_CONFLICT)
+                    elif sell_offer.status == 3:
+                        return JsonResponse({'error': 'Offer has been closed'}, safe=False,
+                                            status=status.HTTP_409_CONFLICT)
                     else:
-                        sell_offer.status=3
+                        sell_offer.status = 3
                         sell_offer.save()
                         return Response(SellOfferSerializer(sell_offer).data, status=status.HTTP_200_OK)
                 else:
@@ -211,6 +221,7 @@ class SellOfferView(APIView):
                 return JsonResponse({'error': str(e)}, safe=False, status=status.HTTP_404_NOT_FOUND)
         else:
             return JsonResponse({'error': str(e)}, safe=False, status=status.HTTP_400_BAD_REQUEST)
+
 
 class UserStockView(APIView):
     serializer_class = UserStockSerializer
@@ -335,3 +346,13 @@ class StockSellView(APIView):
                 recalculate_prices()
             serializer = self.serializer_class(user_stock)
             return Response(serializer.data, status=status.HTTP_200_OK)
+
+
+class PriceHistoryView(APIView):
+    serializer_class = PriceHistorySerializer
+
+    @swagger_auto_schema(responses={200: serializer_class(many=True)})
+    def get(self, request):
+        history = PriceHistory.objects.all()
+        serializer = self.serializer_class(history, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)

@@ -61,4 +61,5 @@ urlpatterns = [
     url(r'^transaction/(?P<pk>\d+)/$', v.TransactionView.as_view(), name='transaction_stock_view'),
     url(r'^transaction/$', v.TransactionView.as_view(), name='transaction_view'),
     url(r'^user/stocks/(?P<pk>\d+)/sell/$', v.StockSellView.as_view(), name='stock_sell_view'),
+    url(r'^transaction_history/$, v.')
 ]
