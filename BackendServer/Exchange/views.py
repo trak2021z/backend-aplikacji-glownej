@@ -80,16 +80,18 @@ class TransactionView(APIView):
         if pk:
             serializer = self.get_stock(request, pk, format)
         else:
+            if 'OBCIAZNIK' not in request.headers:
+                return Response(status=status.HTTP_403_FORBIDDEN)
             serializer = self.get_all(request, format)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
     def get_stock(self, request, pk, format=None):
         stock = Stock.objects.get(id=pk)
-        transactions = Transaction.objects.filter(stock=stock)
+        transactions = Transaction.objects.filter(stock=stock).select_related('stock', 'stock__company')
         return self.serializer_class(transactions, many=True)
 
     def get_all(self, request, format=None):
-        transactions = Transaction.objects.all()
+        transactions = Transaction.objects.all().select_related('stock', 'stock__company')
         return self.serializer_class(transactions, many=True)
 
 
@@ -353,6 +355,8 @@ class PriceHistoryView(APIView):
 
     @swagger_auto_schema(responses={200: serializer_class(many=True)})
     def get(self, request):
+        if 'OBCIAZNIK' not in request.headers:
+            return Response(status=status.HTTP_403_FORBIDDEN)
         history = PriceHistory.objects.all()
         serializer = self.serializer_class(history, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)

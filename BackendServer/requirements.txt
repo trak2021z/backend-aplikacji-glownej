@@ -10,3 +10,4 @@ packaging==20.4
 django-cors-headers==3.5.0
 celery==5.0.1
 requests==2.24.0
+django-silk=4.1.0
