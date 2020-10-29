@@ -49,13 +49,15 @@ INSTALLED_APPS = [
     'rest_auth.registration',
     'drf_yasg2',
     'corsheaders',
-    'Exchange'
+    'Exchange',
+    'silk'
 ]
 
 SITE_ID = 1
 REST_USE_JWT = True
 
 MIDDLEWARE = [
+    'Exchange.middleware.ProfilerMiddleware',
     'corsheaders.middleware.CorsMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
@@ -187,3 +189,7 @@ CELERY_BEAT_SCHEDULE = {
          'schedule': crontab(minute='*/5'),
         },
 }
+
+SILKY_PYTHON_PROFILER = True
+SILKY_PYTHON_PROFILER_BINARY = False
+SILKY_PYTHON_PROFILER_RESULT_PATH = os.path.join(BASE_DIR, 'profiles')
