@@ -120,7 +120,7 @@ class UserOffersView(viewsets.ViewSet):
         current_user = request.user.profile
         user_stocks = UserStock.objects.filter(user=current_user)
         offers = self.Offers(
-            buy_offers=BuyOffer.objects.filter(user=current_user),
+            buy_offers=BuyOffer.objects.filter(user=current_user.pk),
             sell_offers=SellOffer.objects.filter(user_stock__in=user_stocks),
         )
         return self.serializer_class(offers)
@@ -163,7 +163,7 @@ class BuyOfferView(APIView):
                                             status=status.HTTP_409_CONFLICT)
                     else:
                         buy_offer.status = 3
-                        sell_offer.save()
+                        buy_offer.save()
                         return Response(BuyOfferSerializer(buy_offer).data, status=status.HTTP_200_OK)
                 else:
                     return JsonResponse({'error': 'Permission denied'}, status=status.HTTP_403_UNAUTHORIZED)
