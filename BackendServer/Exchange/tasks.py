@@ -89,7 +89,7 @@ def match_sell_buy_offers():
             profile.balance -= amount * stock.price
             profile.save()
             try:
-                user_stock = UserStock.objects.get(stock=stock)
+                user_stock = UserStock.objects.get(stock=stock, user=buy_offer.user)
             except UserStock.DoesNotExist:
                 user_stock = {}
             if user_stock:
@@ -120,7 +120,7 @@ def match_sell_buy_offers():
             continue
         stock = sell_offer.user_stock.stock
         profile = sell_offer.user_stock.user
-        user_stock = UserStock.objects.get(stock=stock)
+        user_stock = sell_offer.user_stock
         amount = sell_offer.stock_amount
         if sell_offer.unit_price < stock.price:
             stock.avail_amount += amount
