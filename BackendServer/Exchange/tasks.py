@@ -42,11 +42,12 @@ def recalculate_prices_interval():
     stocks = Stock.objects.all()
     for stock in stocks:
         last_transaction: Transaction = Transaction.objects.filter(stock=stock).last()
-        old_price = stock.price
-        stock.price -= last_transaction.amount * Decimal('0.1')
-        new_price = stock.price
-        stock.save()
-        PriceHistory.objects.create(stock=stock, old_price=old_price, new_price=new_price)
+        if last_transaction:
+            old_price = stock.price
+            stock.price -= last_transaction.amount * Decimal('0.1')
+            new_price = stock.price
+            stock.save()
+            PriceHistory.objects.create(stock=stock, old_price=old_price, new_price=new_price)
 
 
 @app.task
