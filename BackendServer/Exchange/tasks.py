@@ -126,7 +126,6 @@ def match_sell_buy_offers():
         amount = sell_offer.stock_amount
         if sell_offer.unit_price < stock.price:
             stock.avail_amount += amount
-            sell_offer.delete()
             profile.balance += amount * stock.price
             stock.save()
             profile.save()

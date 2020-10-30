@@ -15,7 +15,7 @@ from .tasks import recalculate_prices, regenerate_stocks, match_sell_buy_offers
 from datetime import datetime as dt
 from .pagination import PaginationHandlerMixin
 from collections import namedtuple
-
+from django.db.models import Q
 
 class DummyView(APIView):
     def get(self, request, pk=None, format=None):
@@ -105,7 +105,10 @@ class UserTransactionView(APIView):
 
     def get_all(self, request, format=None):
         current_user = request.user.profile
-        transactions = Transaction.objects.filter(user=current_user)
+        buy_offers = BuyOffer.objects.filter(user=current_user.pk)
+        user_stocks = UserStock.objects.filter(user=current_user)
+        sell_offers = SellOffer.objects.filter(user_stock__in=user_stocks)
+        transactions = Transaction.objects.filter(Q(user=current_user.pk) | Q(sell__in=sell_offers) | Q(buy__in=buy_offers))
         return self.serializer_class(transactions, many=True)
 
 
@@ -327,12 +330,8 @@ class StockSellView(APIView):
             current_user.save()
             stock.avail_amount += quantity
             stock.save()
-            if stock_quantity == quantity:
-                user_stock.stock_amount -= quantity
-                user_stock.delete()
-            else:
-                user_stock.stock_amount -= quantity
-                user_stock.save()
+            user_stock.stock_amount -= quantity
+            user_stock.save()
             transaction = Transaction(
                 sell=None,
                 buy=None,
