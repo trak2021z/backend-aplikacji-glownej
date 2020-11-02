@@ -4,7 +4,7 @@ from silk.collector import DataCollector
 from silk.middleware import SilkyMiddleware
 from silk.model_factory import ResponseModelFactory
 from silk.profiling.profiler import silk_meta_profiler
-
+import psutil
 
 class ProfilerMiddleware(SilkyMiddleware):
     def __call__(self, request):
@@ -12,6 +12,8 @@ class ProfilerMiddleware(SilkyMiddleware):
             self.process_request(request)
             response = self.get_response(request)
             response = self.process_response(request, response)
+            response['cpu_usage'] = psutil.cpu_percent()
+            response['memory_usage'] = psutil.virtual_memory()[2]
             return response
         else:
             return self.get_response(request)
