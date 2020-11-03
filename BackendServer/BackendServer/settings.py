@@ -170,6 +170,24 @@ if os.getenv('CELERY_BROKER_URL'):
 else:
     CELERY_BROKER_URL = 'amqp://localhost:5672'
 
+CACHES = {
+    'default': {
+        'BACKEND': 'djpymemcache.backend.PyMemcacheCache',
+        'LOCATION': [
+           '127.0.0.1:11211',
+        ],
+    }
+}
+
+if os.getenv('RUN_MEMCACHE'):
+    if os.getenv('RUN_MEMCACHE') == 'TRUE':
+        CACHES['default'] = {
+            'BACKEND': 'djpymemcache.backend.PyMemcacheCache',
+            'LOCATION': [
+                'localhost:11211',
+            ]
+        }
+
 CELERY_TIMEZONE = 'Europe/Warsaw'
 
 CELERY_BEAT_SCHEDULE = {
