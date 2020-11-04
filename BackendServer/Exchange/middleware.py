@@ -9,6 +9,8 @@ from silk.profiling.profiler import silk_meta_profiler
 import psutil
 from django.core.cache import cache, caches
 from pymemcache.client import base
+import json
+from datetime import datetime
 
 
 class ProfilerMiddleware(SilkyMiddleware):
@@ -17,7 +19,7 @@ class ProfilerMiddleware(SilkyMiddleware):
             self.process_request(request)
             response = self.get_response(request)
             response = self.process_response(request, response)
-            response['cpu_usage_current'] = psutil.cpu_percent()
+            response['cpu_usage_current'] = json.dumps({'usage': psutil.cpu_percent(), 'timestamp': datetime.now()}, default=str)
             times = psutil.cpu_times()
             response['cpu_time_spent_user'] = times.user
             response['cpu_time_spent_system'] = times.system
