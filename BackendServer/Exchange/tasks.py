@@ -8,7 +8,7 @@ import pytz
 
 utc=pytz.UTC
 MAX_STOCKS = 1000
-
+MIN_PRICE = Decimal('0.1')
 
 def logical_xor(a, b):
     if bool(a) == bool(b):
@@ -25,10 +25,11 @@ def recalculate_prices():
         if last_transaction:
             if logical_xor(last_transaction.sell, last_transaction.is_sell):
                 old_price = stock.price
-                stock.price -= last_transaction.amount * Decimal('0.2')
-                new_price = stock.price
-                stock.save()
-                PriceHistory.objects.create(stock=stock, old_price=old_price, new_price=new_price)
+                if old_price - last_transaction.amount * Decimal('0.2') > MIN_PRICE:
+                    stock.price -= last_transaction.amount * Decimal('0.2')
+                    new_price = stock.price
+                    stock.save()
+                    PriceHistory.objects.create(stock=stock, old_price=old_price, new_price=new_price)
             else:
                 old_price = stock.price
                 stock.price += last_transaction.amount * Decimal('0.2')
@@ -44,10 +45,11 @@ def recalculate_prices_interval():
         last_transaction: Transaction = Transaction.objects.filter(stock=stock).last()
         if last_transaction:
             old_price = stock.price
-            stock.price -= last_transaction.amount * Decimal('0.1')
-            new_price = stock.price
-            stock.save()
-            PriceHistory.objects.create(stock=stock, old_price=old_price, new_price=new_price)
+            if old_price - last_transaction.amount * Decimal('0.1') > MIN_PRICE:
+                stock.price -= last_transaction.amount * Decimal('0.1')
+                new_price = stock.price
+                stock.save()
+                PriceHistory.objects.create(stock=stock, old_price=old_price, new_price=new_price)
 
 
 @app.task
