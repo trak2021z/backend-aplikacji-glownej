@@ -8,7 +8,10 @@ RUN apk add --no-cache \
     gcc \
     musl-dev \
     python3-dev \
-    curl
+    curl \
+    linux-headers \
+    build-base \
+    memcached
 
 ADD ./ /usr/src/app
 WORKDIR /usr/src/app/BackendServer
