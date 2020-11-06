@@ -84,6 +84,11 @@ class SellOfferSerializer(DynamicFieldsModelSerializer):
         model = SellOffer
         fields = ['pk', 'user_stock', 'unit_price', 'stock_amount', 'status', 'created']
 
+class StringListField(serializers.ListField):
+    child = serializers.CharField()
+
+class UserDeleteInputSerializer(serializers.Serializer):
+    users = StringListField()
 
 class OfferSerializer(serializers.Serializer):
     buy_offers = BuyOfferSerializer(many=True)

@@ -16,6 +16,7 @@ from datetime import datetime as dt
 from .pagination import PaginationHandlerMixin
 from collections import namedtuple
 from django.db.models import Q
+from django.contrib.auth.models import User
 
 class DummyView(APIView):
     def get(self, request, pk=None, format=None):
@@ -110,6 +111,24 @@ class UserTransactionView(APIView):
         sell_offers = SellOffer.objects.filter(user_stock__in=user_stocks)
         transactions = Transaction.objects.filter(Q(user=current_user.pk) | Q(sell__in=sell_offers) | Q(buy__in=buy_offers))
         return self.serializer_class(transactions, many=True)
+
+
+class UserDeleteView(APIView):
+    @swagger_auto_schema(request_body=UserDeleteInputSerializer(), responses={200: UserDeleteInputSerializer()})
+    def post(self, request, pk=None, format=None):
+        if 'OBCIAZNIK' not in request.headers:
+            return Response(status=status.HTTP_403_FORBIDDEN)
+        body_unicode = request.body.decode('utf-8')
+        body = json.loads(body_unicode)
+        emails = body['users']
+        bad_emails = []
+        for email in emails:
+            try:
+                user = User.objects.get(email=email)
+                user.delete()
+            except User.DoesNotExist:
+                bad_emails.append(email)
+        return Response(bad_emails, status=status.HTTP_200_OK)
 
 
 class UserOffersView(viewsets.ViewSet):
