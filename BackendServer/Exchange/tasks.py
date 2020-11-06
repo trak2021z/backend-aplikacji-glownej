@@ -141,7 +141,7 @@ def match_sell_buy_offers():
                 buy=None,
                 stock=stock,
                 user=None,
-                amount=sell_offer.stock_amount,
+                amount=amount,
                 unit_price=stock.price,
                 date=dt.now,
                 is_sell=True,
