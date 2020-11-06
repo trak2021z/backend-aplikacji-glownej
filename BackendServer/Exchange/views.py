@@ -234,7 +234,7 @@ class UserStockView(APIView):
     @swagger_auto_schema(responses={200: serializer_class(many=True)})
     def get(self, request):
         current_user = request.user.profile
-        stocks = UserStock.objects.all().filter(user=current_user)
+        stocks = UserStock.objects.all().filter(user=current_user, stock_amount__gt=0)
         serializer = self.serializer_class(stocks, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
