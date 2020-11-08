@@ -11,6 +11,7 @@ from django.core.cache import cache, caches
 from pymemcache.client import base
 import json
 from datetime import datetime
+import socket
 
 
 class ProfilerMiddleware(SilkyMiddleware):
@@ -25,6 +26,7 @@ class ProfilerMiddleware(SilkyMiddleware):
             response['cpu_time_spent_system'] = times.system
             response['cpu_time_spent_idle'] = times.idle
             response['memory_usage'] = psutil.virtual_memory()[2]
+            response['container_id'] = socket.gethostname()
             if os.getenv('RUN_MEMCACHE'):
                 if os.getenv('RUN_MEMCACHE') == 'TRUE':
                     client = base.Client(('localhost', 11211))
