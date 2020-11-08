@@ -75,48 +75,43 @@ def match_sell_buy_offers():
         stock = buy_offer.stock
         profile = buy_offer.user
         balance = profile.balance
+        total_price = buy_offer.stock_amount * stock.price
         if buy_offer.unit_price > stock.price:
-            if stock.avail_amount < buy_offer.stock_amount:
-                total_price = stock.avail_amount * stock.price
-                if total_price > balance:
-                    amount = int(balance / stock.price)
-                else:
-                    amount = stock.avail_amount
+            if stock.avail_amount < buy_offer.stock_amount or total_price > balance:
+                continue
             else:
                 amount = buy_offer.stock_amount
-            stock.avail_amount -= amount
-            buy_offer.stock_amount -= amount
-            if buy_offer.stock_amount == 0:
+                stock.avail_amount -= amount
                 buy_offer.status = 3
-            buy_offer.save()
-            stock.save()
-            profile.balance -= amount * stock.price
-            profile.save()
-            try:
-                user_stock = UserStock.objects.get(stock=stock, user=buy_offer.user)
-            except UserStock.DoesNotExist:
-                user_stock = {}
-            if user_stock:
-                user_stock.stock_amount += amount
-                user_stock.save()
-            else:
-                new_user_stock = UserStock(
-                    user=profile,
+                buy_offer.save()
+                stock.save()
+                profile.balance -= amount * stock.price
+                profile.save()
+                try:
+                    user_stock = UserStock.objects.get(stock=stock, user=buy_offer.user)
+                except UserStock.DoesNotExist:
+                    user_stock = {}
+                if user_stock:
+                    user_stock.stock_amount += amount
+                    user_stock.save()
+                else:
+                    new_user_stock = UserStock(
+                        user=profile,
+                        stock=stock,
+                        stock_amount=amount,
+                    )
+                    new_user_stock.save()
+                new_transaction = Transaction(
+                    sell=None,
+                    buy=buy_offer,
                     stock=stock,
-                    stock_amount=amount,
+                    user=None,
+                    amount=amount,
+                    unit_price=stock.price,
+                    date=dt.now,
+                    is_sell=False,
                 )
-                new_user_stock.save()
-            new_transaction = Transaction(
-                sell=None,
-                buy=buy_offer,
-                stock=stock,
-                user=None,
-                amount=amount,
-                unit_price=stock.price,
-                date=dt.now,
-                is_sell=False,
-            )
-            new_transaction.save()
+                new_transaction.save()
     for sell_offer in sell_offers:
         if sell_offer.created + timedelta(1) < today:
             sell_offer.status = 2
