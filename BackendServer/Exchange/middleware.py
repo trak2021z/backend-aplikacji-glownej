@@ -30,7 +30,7 @@ class ProfilerMiddleware(SilkyMiddleware):
             if os.getenv('RUN_MEMCACHE'):
                 if os.getenv('RUN_MEMCACHE') == 'TRUE':
                     client = base.Client(('localhost', 11211))
-                    response['memory_usage_aggregated'] = client.get('CPU_USAGE')
+                    response['cpu_usage_aggregated'] = client.get('CPU_USAGE')
             return response
         else:
             return self.get_response(request)
