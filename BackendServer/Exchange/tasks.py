@@ -127,7 +127,6 @@ def match_sell_buy_offers():
             stock.save()
             profile.save()
             sell_offer.status = 3
-            sell_offer.stock_amount = 0
             sell_offer.save()
             user_stock.stock_amount -= amount
             user_stock.save()
