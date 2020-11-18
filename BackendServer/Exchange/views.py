@@ -109,7 +109,7 @@ class UserTransactionView(APIView):
         buy_offers = BuyOffer.objects.filter(user=current_user.pk)
         user_stocks = UserStock.objects.filter(user=current_user)
         sell_offers = SellOffer.objects.filter(user_stock__in=user_stocks)
-        transactions = Transaction.objects.filter(Q(user=current_user.pk) | Q(sell__in=sell_offers) | Q(buy__in=buy_offers))
+        transactions = Transaction.objects.filter(Q(user=current_user.pk) | Q(sell__in=sell_offers) | Q(buy__in=buy_offers)).order_by('-date')
         return self.serializer_class(transactions, many=True)
 
 
