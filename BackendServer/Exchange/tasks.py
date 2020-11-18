@@ -7,7 +7,6 @@ from datetime import datetime as dt, timedelta
 import pytz
 
 utc=pytz.UTC
-MAX_STOCKS = 1000
 MIN_PRICE = Decimal('0.1')
 
 def logical_xor(a, b):
@@ -57,7 +56,7 @@ def regenerate_stocks():
     seed()
     stocks = Stock.objects.all()
     for stock in stocks:
-        new_items_count = stock.avail_amount + randrange(MAX_STOCKS - stock.avail_amount)
+        new_items_count = stock.avail_amount + randrange(1000)
         stock.avail_amount = new_items_count
         stock.save()
 
