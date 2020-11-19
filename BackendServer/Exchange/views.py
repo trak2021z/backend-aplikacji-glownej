@@ -121,15 +121,11 @@ class UserDeleteView(APIView):
         body_unicode = request.body.decode('utf-8')
         body = json.loads(body_unicode)
         emails = body['users']
-        bad_emails = []
+        users = User.objects.all()
         for email in emails:
-            try:
-                user = User.objects.get(email=email)
+            for user in users.filter(email=email):
                 user.delete()
-            except User.DoesNotExist:
-                bad_emails.append(email)
-        return Response(bad_emails, status=status.HTTP_200_OK)
-
+        return Response(status=status.HTTP_200_OK)
 
 class UserOffersView(viewsets.ViewSet):
     serializer_class = OfferSerializer
