@@ -12,7 +12,8 @@ RUN apk add --no-cache \
     linux-headers \
     build-base \
     memcached
-
+    
+RUN mkdir /app
 ADD ./ /usr/src/app
 WORKDIR /usr/src/app/BackendServer
 
