@@ -26,7 +26,7 @@ class ProfilerMiddleware(SilkyMiddleware):
             response['cpu_time_spent_system'] = times.system
             response['cpu_time_spent_idle'] = times.idle
             response['memory_usage'] = psutil.virtual_memory()[2]
-            response['container_id'] = socket.gethostname()
+            response['container_id'] = socket.gethostbyname(socket.gethostname())
             if os.getenv('RUN_MEMCACHE'):
                 if os.getenv('RUN_MEMCACHE') == 'TRUE':
                     client = base.Client(('localhost', 11211))
