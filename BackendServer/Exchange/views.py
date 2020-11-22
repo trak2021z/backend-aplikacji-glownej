@@ -43,7 +43,7 @@ class StocksView(APIView, PaginationHandlerMixin):
 
     @swagger_auto_schema(responses={200: serializer_class(many=True)})
     def get(self, request, format=None):
-        stocks = Stock.objects.all()
+        stocks = Stock.objects.all().prefetch_related('company')
         page = self.paginate_queryset(stocks)
         if page is not None:
             serializer = self.get_paginated_response(self.serializer_class(page, many=True).data)
@@ -109,7 +109,7 @@ class UserTransactionView(APIView):
         buy_offers = BuyOffer.objects.filter(user=current_user.pk)
         user_stocks = UserStock.objects.filter(user=current_user)
         sell_offers = SellOffer.objects.filter(user_stock__in=user_stocks)
-        transactions = Transaction.objects.filter(Q(user=current_user.pk) | Q(sell__in=sell_offers) | Q(buy__in=buy_offers)).order_by('-date')
+        transactions = Transaction.objects.filter(Q(user=current_user.pk) | Q(sell__in=sell_offers) | Q(buy__in=buy_offers)).prefetch_related('stock', 'stock__company').order_by('-date')
         return self.serializer_class(transactions, many=True)
 
 
@@ -126,6 +126,7 @@ class UserDeleteView(APIView):
             for user in users.filter(email=email):
                 user.delete()
         return Response(status=status.HTTP_200_OK)
+
 
 class UserOffersView(viewsets.ViewSet):
     serializer_class = OfferSerializer
@@ -249,7 +250,7 @@ class UserStockView(APIView):
     @swagger_auto_schema(responses={200: serializer_class(many=True)})
     def get(self, request):
         current_user = request.user.profile
-        stocks = UserStock.objects.all().filter(user=current_user, stock_amount__gt=0)
+        stocks = UserStock.objects.all().filter(user=current_user, stock_amount__gt=0).prefetch_related('stock', 'stock__company')
         serializer = self.serializer_class(stocks, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
@@ -371,6 +372,6 @@ class PriceHistoryView(APIView):
     def get(self, request):
         if 'OBCIAZNIK' not in request.headers:
             return Response(status=status.HTTP_403_FORBIDDEN)
-        history = PriceHistory.objects.all()
+        history = PriceHistory.objects.all().prefetch_related('stock', 'stock__company')
         serializer = self.serializer_class(history, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
